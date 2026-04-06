@@ -1,20 +1,31 @@
 # Bab 2: Konsep Widget (Stateless vs Stateful)
 
 ## 1. Tujuan Praktikum
-- Memahami konsep dasar Widget di Flutter.
+- Memahami konsep dasar widget di Flutter.
 - Mengetahui perbedaan mendasar antara `StatelessWidget` dan `StatefulWidget`.
 - Mampu mengimplementasikan kedua jenis widget tersebut dalam pembuatan UI.
+- Mengenal lebih banyak widget dasar seperti `Text`, `Icon`, `Card`, `Chip`, `ElevatedButton`, `SwitchListTile`, `CheckboxListTile`, dan `Slider`.
 
 ## 2. Dasar Teori
-Di dalam Flutter, hampir semua elemen antarmuka pengguna adalah **Widget**. Widget mendeskripsikan bagaimana tampilan aplikasi seharusnya berdasarkan konfigurasi dan *state* (status) saat ini.
-- **StatelessWidget**: Widget yang *state*-nya tidak dapat berubah (immutable) setelah dibangun. Digunakan untuk UI yang statis, seperti ikon atau label teks sederhana.
-- **StatefulWidget**: Widget yang *state*-nya dapat berubah secara dinamis (mutable) selama masa hidup *widget* tersebut. Digunakan untuk elemen UI yang interaktif atau dapat diperbarui, seperti checkbox, radio button, atau tampilan bentuk form yang menerima input.
+Di dalam Flutter, hampir semua elemen antarmuka pengguna adalah **widget**. Widget mendeskripsikan bagaimana tampilan aplikasi seharusnya dibangun berdasarkan konfigurasi dan *state* (status) saat ini.
+- **`StatelessWidget`**: Widget yang *state*-nya tidak berubah setelah dibangun. Cocok untuk tampilan yang bersifat presentasional, misalnya judul, icon, kartu profil, label, atau banner informasi.
+- **`StatefulWidget`**: Widget yang *state*-nya bisa berubah selama aplikasi berjalan. Cocok untuk elemen yang interaktif seperti counter, checkbox, switch, slider, dan form.
+- Metode `build()` akan dipanggil ketika Flutter perlu menggambar ulang tampilan.
+- Pada `StatefulWidget`, setiap perubahan data yang memengaruhi UI harus dibungkus dengan `setState()`.
+
+### 2.1 Contoh Widget yang Sering Dipakai
+- `Text`: menampilkan teks.
+- `Icon`: menampilkan simbol visual.
+- `Image`: menampilkan gambar dari aset lokal atau internet.
+- `Card`: membungkus informasi dalam panel.
+- `Row` dan `Column`: menyusun widget secara horizontal dan vertikal.
+- `ElevatedButton`, `OutlinedButton`, dan `IconButton`: menerima interaksi dari pengguna.
 
 ## 3. Langkah Praktikum
 
 ### 3.1 Membuat Aplikasi Sederhana dengan StatelessWidget
 1. Buka file `lib/main.dart` dari proyek yang sudah dibuat dan buat file baru `lib/stateless_widget_demo.dart`.
-2. Hapus seluruh isi `main.dart` dan ganti dengan kode berikut untuk membuat struktur dasar aplikasi:
+2. Hapus seluruh isi `main.dart` dan ganti dengan kode berikut:
    ```dart
    // File: lib/main.dart
    import 'package:flutter/material.dart';
@@ -30,13 +41,18 @@ Di dalam Flutter, hampir semua elemen antarmuka pengguna adalah **Widget**. Widg
      @override
      Widget build(BuildContext context) {
        return MaterialApp(
+         debugShowCheckedModeBanner: false,
          title: 'Praktikum Widget',
+         theme: ThemeData(
+           colorSchemeSeed: Colors.indigo,
+           useMaterial3: true,
+         ),
          home: const StatelessWidgetDemo(),
        );
      }
    }
    ```
-3. Selanjutnya di dalam file `lib/stateless_widget_demo.dart`, buat komponen Stateless-nya:
+3. Selanjutnya di dalam file `lib/stateless_widget_demo.dart`, buat komponen stateless berikut:
    ```dart
    // File: lib/stateless_widget_demo.dart
    import 'package:flutter/material.dart';
@@ -50,19 +66,114 @@ Di dalam Flutter, hampir semua elemen antarmuka pengguna adalah **Widget**. Widg
          appBar: AppBar(
            title: const Text('Stateless Widget'),
          ),
-         body: const Center(
-           child: Text('Ini adalah StatelessWidget'),
+         body: SingleChildScrollView(
+           padding: const EdgeInsets.all(16),
+           child: Column(
+             crossAxisAlignment: CrossAxisAlignment.start,
+             children: [
+               Card(
+                 elevation: 3,
+                 child: Padding(
+                   padding: const EdgeInsets.all(16),
+                   child: Row(
+                     children: [
+                       CircleAvatar(
+                         radius: 30,
+                         backgroundColor: Colors.indigo.shade100,
+                         child: const Icon(
+                           Icons.person,
+                           size: 32,
+                           color: Colors.indigo,
+                         ),
+                       ),
+                       const SizedBox(width: 16),
+                       Expanded(
+                         child: Column(
+                           crossAxisAlignment: CrossAxisAlignment.start,
+                           children: [
+                             Text(
+                               'Alya Putri',
+                               style: Theme.of(context).textTheme.titleLarge,
+                             ),
+                             const SizedBox(height: 4),
+                             const Text('Mahasiswa Informatika'),
+                             const SizedBox(height: 8),
+                             const Wrap(
+                               spacing: 8,
+                               runSpacing: 8,
+                               children: [
+                                 Chip(label: Text('Aktif')),
+                                 Chip(label: Text('Flutter Dasar')),
+                                 Chip(label: Text('Semester 4')),
+                               ],
+                             ),
+                           ],
+                         ),
+                       ),
+                     ],
+                   ),
+                 ),
+               ),
+               const SizedBox(height: 20),
+               Text(
+                 'Contoh widget statis lainnya',
+                 style: Theme.of(context).textTheme.titleMedium,
+               ),
+               const SizedBox(height: 12),
+               const Row(
+                 mainAxisAlignment: MainAxisAlignment.spaceAround,
+                 children: [
+                   _InfoIcon(icon: Icons.email, label: 'Email'),
+                   _InfoIcon(icon: Icons.phone_android, label: 'Telepon'),
+                   _InfoIcon(icon: Icons.school, label: 'Kampus'),
+                 ],
+               ),
+               const SizedBox(height: 20),
+               ElevatedButton.icon(
+                 onPressed: () {
+                   ScaffoldMessenger.of(context).showSnackBar(
+                     const SnackBar(
+                       content: Text('Tombol ditekan tanpa mengubah state'),
+                     ),
+                   );
+                 },
+                 icon: const Icon(Icons.info_outline),
+                 label: const Text('Tampilkan Info'),
+               ),
+             ],
+           ),
          ),
        );
      }
    }
-   ```
-4. Jalankan aplikasi (Hot Reload) dan perhatikan hasilnya. Teks di tengah layar tidak akan berubah.
 
-### 3.2 Memodifikasi Aplikasi Sederhana dengan StatefulWidget
-1. Kita akan mengubah bagian isi (body) menjadi sebuah `StatefulWidget` agar interaktif.
-2. Buat file baru terpisah dengan nama `lib/stateful_widget_demo.dart` yang memuat class `CounterWidget`.
-3. Ubah impor (import) pada kode `lib/main.dart` agar memanggil layar dinamis kita:
+   class _InfoIcon extends StatelessWidget {
+     final IconData icon;
+     final String label;
+
+     const _InfoIcon({
+       required this.icon,
+       required this.label,
+     });
+
+     @override
+     Widget build(BuildContext context) {
+       return Column(
+         children: [
+           Icon(icon, size: 32, color: Colors.indigo),
+           const SizedBox(height: 8),
+           Text(label),
+         ],
+       );
+     }
+   }
+   ```
+4. Jalankan aplikasi dan perhatikan bahwa tampilan statis di atas sudah memanfaatkan beberapa widget sekaligus: `Card`, `CircleAvatar`, `Icon`, `Text`, `Chip`, `Row`, `Column`, dan `ElevatedButton.icon`.
+
+### 3.2 Membuat Widget Interaktif dengan StatefulWidget
+1. Sekarang kita ubah aplikasi menjadi interaktif dengan memanfaatkan `StatefulWidget`.
+2. Buat file baru terpisah bernama `lib/stateful_widget_demo.dart`.
+3. Ubah `lib/main.dart` agar memanggil layar stateful:
    ```dart
    // File: lib/main.dart
    import 'package:flutter/material.dart';
@@ -78,30 +189,46 @@ Di dalam Flutter, hampir semua elemen antarmuka pengguna adalah **Widget**. Widg
      @override
      Widget build(BuildContext context) {
        return MaterialApp(
+         debugShowCheckedModeBanner: false,
          title: 'Praktikum Widget',
-         home: const CounterWidget(),
+         theme: ThemeData(
+           colorSchemeSeed: Colors.indigo,
+           useMaterial3: true,
+         ),
+         home: const StatefulWidgetDemo(),
        );
      }
    }
    ```
-4. Buat kode untuk layar interaktif ini di `lib/stateful_widget_demo.dart`:
+4. Buat kode layar interaktif berikut di `lib/stateful_widget_demo.dart`:
    ```dart
    // File: lib/stateful_widget_demo.dart
    import 'package:flutter/material.dart';
 
-   class CounterWidget extends StatefulWidget {
-     const CounterWidget({super.key});
+   class StatefulWidgetDemo extends StatefulWidget {
+     const StatefulWidgetDemo({super.key});
 
      @override
-     State<CounterWidget> createState() => _CounterWidgetState();
+     State<StatefulWidgetDemo> createState() => _StatefulWidgetDemoState();
    }
 
-   class _CounterWidgetState extends State<CounterWidget> {
+   class _StatefulWidgetDemoState extends State<StatefulWidgetDemo> {
      int _counter = 0;
+     bool _isFavorite = false;
+     bool _isReminderActive = true;
+     double _fontSize = 18;
 
      void _incrementCounter() {
        setState(() {
          _counter++;
+       });
+     }
+
+     void _decrementCounter() {
+       setState(() {
+         if (_counter > 0) {
+           _counter--;
+         }
        });
      }
 
@@ -111,30 +238,124 @@ Di dalam Flutter, hampir semua elemen antarmuka pengguna adalah **Widget**. Widg
          appBar: AppBar(
            title: const Text('Stateful Widget'),
          ),
-         body: Center(
-           child: Column(
-             mainAxisAlignment: MainAxisAlignment.center,
-             children: <Widget>[
-               const Text('Anda telah menekan tombol sebanyak:'),
-               Text(
-                 '$_counter',
-                 style: Theme.of(context).textTheme.headlineMedium,
+         body: ListView(
+           padding: const EdgeInsets.all(16),
+           children: [
+             Card(
+               child: Padding(
+                 padding: const EdgeInsets.all(16),
+                 child: Column(
+                   crossAxisAlignment: CrossAxisAlignment.start,
+                   children: [
+                     Row(
+                       children: [
+                         Icon(
+                           _isFavorite
+                               ? Icons.favorite
+                               : Icons.favorite_border,
+                           color: _isFavorite ? Colors.red : Colors.grey,
+                           size: 36,
+                         ),
+                         const SizedBox(width: 12),
+                         Expanded(
+                           child: Text(
+                             'Jumlah klik: $_counter',
+                             style: TextStyle(
+                               fontSize: _fontSize,
+                               fontWeight: FontWeight.bold,
+                             ),
+                           ),
+                         ),
+                       ],
+                     ),
+                     const SizedBox(height: 16),
+                     Row(
+                       children: [
+                         Expanded(
+                           child: ElevatedButton.icon(
+                             onPressed: _incrementCounter,
+                             icon: const Icon(Icons.add),
+                             label: const Text('Tambah'),
+                           ),
+                         ),
+                         const SizedBox(width: 12),
+                         Expanded(
+                           child: OutlinedButton.icon(
+                             onPressed: _decrementCounter,
+                             icon: const Icon(Icons.remove),
+                             label: const Text('Kurang'),
+                           ),
+                         ),
+                       ],
+                     ),
+                   ],
+                 ),
                ),
-               const SizedBox(height: 20),
-               ElevatedButton(
-                 onPressed: _incrementCounter,
-                 child: const Text('Tambah Angka'),
+             ),
+             const SizedBox(height: 16),
+             SwitchListTile(
+               title: const Text('Aktifkan pengingat belajar'),
+               subtitle: const Text('Contoh perubahan nilai boolean'),
+               value: _isReminderActive,
+               onChanged: (value) {
+                 setState(() {
+                   _isReminderActive = value;
+                 });
+               },
+             ),
+             CheckboxListTile(
+               title: const Text('Tandai materi sebagai favorit'),
+               value: _isFavorite,
+               onChanged: (value) {
+                 setState(() {
+                   _isFavorite = value ?? false;
+                 });
+               },
+             ),
+             const SizedBox(height: 8),
+             Text(
+               'Ukuran teks preview: ${_fontSize.toStringAsFixed(0)}',
+             ),
+             Slider(
+               value: _fontSize,
+               min: 14,
+               max: 32,
+               divisions: 9,
+               label: _fontSize.toStringAsFixed(0),
+               onChanged: (value) {
+                 setState(() {
+                   _fontSize = value;
+                 });
+               },
+             ),
+             Container(
+               padding: const EdgeInsets.all(16),
+               decoration: BoxDecoration(
+                 color: Colors.indigo.shade50,
+                 borderRadius: BorderRadius.circular(16),
                ),
-             ],
-           ),
+               child: Text(
+                 'Favorit: ${_isFavorite ? "Ya" : "Tidak"}\n'
+                 'Pengingat: ${_isReminderActive ? "Aktif" : "Nonaktif"}\n'
+                 'Counter saat ini: $_counter',
+               ),
+             ),
+           ],
          ),
        );
      }
    }
    ```
-5. Jalankan aplikasi.
-6. Klik tombol "Tambah Angka" dan perhatikan bahwa teks angka akan terus bertambah. Modifikasi *state* dilakukan menggunakan metode `setState()`.
+5. Jalankan aplikasi, lalu coba tekan tombol, geser `Slider`, ubah `Switch`, dan centang `Checkbox`.
+6. Perhatikan bahwa beberapa widget berubah secara langsung karena nilainya diperbarui melalui `setState()`.
+
+### 3.3 Ringkasan Widget yang Dicoba
+Pada bab ini, mahasiswa sudah mencoba beberapa widget penting:
+- Widget statis: `Text`, `Icon`, `Chip`, `Card`, `CircleAvatar`.
+- Widget interaktif: `ElevatedButton`, `OutlinedButton`, `SwitchListTile`, `CheckboxListTile`, `Slider`.
+- Widget penyusun tampilan: `Row`, `Column`, `Wrap`, `ListView`, `Container`.
 
 ## 4. Tugas Latihan
-1. Modifikasi aplikasi counter di atas dengan menambahkan satu tombol lagi untuk **mengurangi** angka (`_decrementCounter`).
-2. Pastikan angka tidak bisa kurang dari 0 (berikan kondisi/validasi pada logika fungsi).
+1. Tambahkan satu tombol `Reset` untuk mengembalikan nilai counter ke `0`.
+2. Tambahkan widget `RadioListTile` untuk memilih tema warna favorit pengguna.
+3. Modifikasi tampilan `StatelessWidgetDemo` agar menampilkan foto profil menggunakan `Image.network` atau `Image.asset`.

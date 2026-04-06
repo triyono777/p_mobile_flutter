@@ -4,17 +4,22 @@
 - Memahami konsep dasar navigasi dan *routing* di Flutter.
 - Mampu memindahkan layar menggunakan `Navigator.push` dan `Navigator.pop`.
 - Mampu mengirim data antar layar/halaman.
+- Mampu menerima kembali data dari halaman kedua.
+- Mengenal widget yang sering dipakai pada alur navigasi seperti `Card`, `ListTile`, `FloatingActionButton`, `SnackBar`, `ElevatedButton`, dan `OutlinedButton`.
 
 ## 2. Dasar Teori
-Aplikasi yang kompleks pasti memiliki lebih dari satu layar (halaman). Dalam Flutter, *halaman* dan *rute* memiliki arti yang sama, dan semuanya adalah widget.
-Pengelolaan rute menggunakan konsep stack (tumpukan).
-- **`Navigator.push`**: Menambahkan halaman baru ke atas tumpukan (stack) sehingga layar ini yang akan ditampilkan ke pengguna.
-- **`Navigator.pop`**: Menghapus halaman saat ini dari tumpukan dan kembali ke halaman sebelumnya.
+Aplikasi yang kompleks pasti memiliki lebih dari satu layar (halaman). Dalam Flutter, *halaman* dan *route* sama-sama direpresentasikan sebagai widget.
+
+Pengelolaan route menggunakan konsep *stack* (tumpukan).
+- **`Navigator.push`**: Menambahkan halaman baru ke atas *stack*, lalu menampilkan halaman tersebut.
+- **`Navigator.pop`**: Menghapus halaman aktif dan kembali ke halaman sebelumnya.
+- **`Navigator.push`** mengembalikan objek `Future`, sehingga halaman pertama dapat menunggu hasil dari halaman kedua.
+- Data antar halaman dapat dikirim melalui konstruktor, sedangkan data balik dapat dikembalikan saat `Navigator.pop(context, data)`.
 
 ## 3. Langkah Praktikum
 
-### 3.1 Membuat Navigasi Sederhana
-1. Siapkan dua buah halaman. Halaman Pertama akan memiliki tombol untuk beralih ke Halaman Kedua dan akan berada di file terpisah.
+### 3.1 Membuat Navigasi Sederhana yang Lebih Realistis
+1. Siapkan dua halaman. Halaman pertama akan menampilkan beberapa menu yang bisa dibuka ke halaman detail.
 2. Ketikkan kode berikut pada file `lib/main.dart`:
    ```dart
    // File: lib/main.dart
@@ -22,13 +27,27 @@ Pengelolaan rute menggunakan konsep stack (tumpukan).
    import 'halaman_pertama.dart';
 
    void main() {
-     runApp(const MaterialApp(
-       title: 'Navigasi Dasar',
-       home: HalamanPertama(),
-     ));
+     runApp(const MyApp());
+   }
+
+   class MyApp extends StatelessWidget {
+     const MyApp({super.key});
+
+     @override
+     Widget build(BuildContext context) {
+       return MaterialApp(
+         debugShowCheckedModeBanner: false,
+         title: 'Navigasi Dasar',
+         theme: ThemeData(
+           colorSchemeSeed: Colors.teal,
+           useMaterial3: true,
+         ),
+         home: const HalamanPertama(),
+       );
+     }
    }
    ```
-3. Buat file baru untuk Halaman Pertama `lib/halaman_pertama.dart`:
+3. Buat file `lib/halaman_pertama.dart`:
    ```dart
    // File: lib/halaman_pertama.dart
    import 'package:flutter/material.dart';
@@ -37,87 +56,176 @@ Pengelolaan rute menggunakan konsep stack (tumpukan).
    class HalamanPertama extends StatelessWidget {
      const HalamanPertama({super.key});
 
+     Future<void> _bukaHalaman(
+       BuildContext context, {
+       required String judul,
+       required String deskripsi,
+     }) async {
+       final hasil = await Navigator.push<String>(
+         context,
+         MaterialPageRoute(
+           builder: (context) => HalamanKedua(
+             judulHalaman: judul,
+             deskripsi: deskripsi,
+             pesanData: 'Halo dari Halaman Pertama',
+           ),
+         ),
+       );
+
+       if (!context.mounted) return;
+
+       if (hasil != null && hasil.isNotEmpty) {
+         ScaffoldMessenger.of(context).showSnackBar(
+           SnackBar(content: Text(hasil)),
+         );
+       }
+     }
+
      @override
      Widget build(BuildContext context) {
        return Scaffold(
          appBar: AppBar(
            title: const Text('Halaman Pertama'),
          ),
-         body: Center(
-           child: ElevatedButton(
-             child: const Text('Pindah ke Halaman Kedua'),
-             onPressed: () {
-               // Navigasi ke halaman kedua
-               Navigator.push(
+         body: ListView(
+           padding: const EdgeInsets.all(16),
+           children: [
+             const Text(
+               'Pilih menu di bawah untuk membuka halaman detail.',
+               style: TextStyle(fontSize: 16),
+             ),
+             const SizedBox(height: 16),
+             Card(
+               child: ListTile(
+                 leading: const CircleAvatar(
+                   child: Icon(Icons.person),
+                 ),
+                 title: const Text('Profil Mahasiswa'),
+                 subtitle: const Text(
+                   'Contoh navigasi dengan data via constructor',
+                 ),
+                 trailing: const Icon(Icons.arrow_forward_ios),
+                 onTap: () => _bukaHalaman(
+                   context,
+                   judul: 'Profil Mahasiswa',
+                   deskripsi: 'Halaman ini menampilkan data profil sederhana.',
+                 ),
+               ),
+             ),
+             Card(
+               child: ListTile(
+                 leading: const CircleAvatar(
+                   child: Icon(Icons.book),
+                 ),
+                 title: const Text('Mata Kuliah'),
+                 subtitle: const Text(
+                   'Contoh halaman detail kedua dengan route yang sama',
+                 ),
+                 trailing: const Icon(Icons.arrow_forward_ios),
+                 onTap: () => _bukaHalaman(
+                   context,
+                   judul: 'Daftar Mata Kuliah',
+                   deskripsi:
+                       'Halaman ini dapat diisi daftar mata kuliah semester berjalan.',
+                 ),
+               ),
+             ),
+             const SizedBox(height: 16),
+             ElevatedButton.icon(
+               onPressed: () => _bukaHalaman(
                  context,
-                 MaterialPageRoute(builder: (context) => const HalamanKedua()),
-               );
-             },
+                 judul: 'Promo Praktikum',
+                 deskripsi:
+                     'Tombol biasa juga bisa dipakai untuk melakukan routing.',
+               ),
+               icon: const Icon(Icons.open_in_new),
+               label: const Text('Buka Halaman Kedua'),
+             ),
+           ],
+         ),
+         floatingActionButton: FloatingActionButton.extended(
+           onPressed: () => _bukaHalaman(
+             context,
+             judul: 'Bantuan',
+             deskripsi:
+                 'FloatingActionButton juga bisa digunakan untuk navigasi cepat.',
            ),
+           icon: const Icon(Icons.navigation),
+           label: const Text('Go'),
          ),
        );
      }
    }
    ```
-4. Buat file baru untuk Halaman Kedua `lib/halaman_kedua.dart`:
+4. Buat file `lib/halaman_kedua.dart`:
    ```dart
    // File: lib/halaman_kedua.dart
    import 'package:flutter/material.dart';
 
    class HalamanKedua extends StatelessWidget {
-     const HalamanKedua({super.key});
-
-     @override
-     Widget build(BuildContext context) {
-       return Scaffold(
-         appBar: AppBar(
-           title: const Text('Halaman Kedua'),
-         ),
-         body: Center(
-           child: ElevatedButton(
-             onPressed: () {
-               // Kembali ke halaman pertama
-               Navigator.pop(context);
-             },
-             child: const Text('Kembali'),
-           ),
-         ),
-       );
-     }
-   }
-   ```
-5. Lakukan Hot Reload atau `flutter run`. Cobalah untuk berpindah bolak-balik antar halaman. Perhatikan fungsi default dari AppBar yang otomatis menyediakan tombol panah mundur (back) ketika layar tersebut ditumpuk (di-*push*).
-
-### 3.2 Mengirim Data antar Halaman (Pass Data via Constructor)
-Seringkali ketika berpindah halaman kita ingin membawa informasi suatu data tertentu.
-1. Modifikasi kode di `lib/halaman_kedua.dart`. Pada `HalamanKedua`, tambahkan sebuah properti dan definisikan di konstruktor.
-   ```dart
-   // File: lib/halaman_kedua.dart
-   import 'package:flutter/material.dart';
-
-   class HalamanKedua extends StatelessWidget {
+     final String judulHalaman;
+     final String deskripsi;
      final String pesanData;
 
-     // Modifikasi Constructor agar meminta data (required parameter)
-     const HalamanKedua({super.key, required this.pesanData});
+     const HalamanKedua({
+       super.key,
+       required this.judulHalaman,
+       required this.deskripsi,
+       required this.pesanData,
+     });
 
      @override
      Widget build(BuildContext context) {
        return Scaffold(
          appBar: AppBar(
-           title: const Text('Halaman Kedua (Menerima Data)'),
+           title: Text(judulHalaman),
          ),
-         body: Center(
+         body: Padding(
+           padding: const EdgeInsets.all(16),
            child: Column(
-             mainAxisAlignment: MainAxisAlignment.center,
+             crossAxisAlignment: CrossAxisAlignment.stretch,
              children: [
-               Text('Data yang diterima: $pesanData', style: const TextStyle(fontSize: 20)),
-               const SizedBox(height: 20),
-               ElevatedButton(
+               Card(
+                 elevation: 2,
+                 child: Padding(
+                   padding: const EdgeInsets.all(16),
+                   child: Column(
+                     children: [
+                       const Icon(Icons.send, size: 48, color: Colors.teal),
+                       const SizedBox(height: 12),
+                       Text(
+                         pesanData,
+                         textAlign: TextAlign.center,
+                         style: Theme.of(context).textTheme.titleMedium,
+                       ),
+                     ],
+                   ),
+                 ),
+               ),
+               const SizedBox(height: 16),
+               Text(
+                 'Deskripsi Halaman',
+                 style: Theme.of(context).textTheme.titleMedium,
+               ),
+               const SizedBox(height: 8),
+               Text(deskripsi),
+               const Spacer(),
+               ElevatedButton.icon(
+                 onPressed: () {
+                   Navigator.pop(
+                     context,
+                     'Data dari $judulHalaman berhasil dikirim balik',
+                   );
+                 },
+                 icon: const Icon(Icons.check_circle),
+                 label: const Text('Kirim Hasil & Kembali'),
+               ),
+               const SizedBox(height: 12),
+               OutlinedButton(
                  onPressed: () {
                    Navigator.pop(context);
                  },
-                 child: const Text('Kembali'),
+                 child: const Text('Kembali Tanpa Data'),
                ),
              ],
            ),
@@ -126,19 +234,43 @@ Seringkali ketika berpindah halaman kita ingin membawa informasi suatu data tert
      }
    }
    ```
-2. Kemudian pada bagian tombol di `lib/halaman_pertama.dart`, perbaiki cara pemanggilan rutenya agar mengirim argumen:
-   ```dart
-   // Di dalam file lib/halaman_pertama.dart
-   Navigator.push(
-     context,
-     MaterialPageRoute(
-       builder: (context) => const HalamanKedua(pesanData: 'Halo dari Halaman Pertama!'),
-     ),
-   );
-   ```
-3. Uji coba aplikasi tersebut.
+5. Jalankan aplikasi, lalu cobalah berpindah antar halaman lewat `ListTile`, `ElevatedButton`, dan `FloatingActionButton`.
+
+### 3.2 Mengirim Data antar Halaman
+Pada contoh di atas, data dikirim dari halaman pertama ke halaman kedua melalui konstruktor:
+```dart
+MaterialPageRoute(
+  builder: (context) => HalamanKedua(
+    judulHalaman: judul,
+    deskripsi: deskripsi,
+    pesanData: 'Halo dari Halaman Pertama',
+  ),
+),
+```
+Dengan cara ini, `HalamanKedua` dapat menerima data yang berbeda-beda meskipun menggunakan widget yang sama.
+
+### 3.3 Mengembalikan Data dari Halaman Kedua
+Halaman kedua juga dapat mengirim hasil kembali ke halaman pertama:
+```dart
+Navigator.pop(
+  context,
+  'Data dari $judulHalaman berhasil dikirim balik',
+);
+```
+Karena `Navigator.push` mengembalikan `Future`, maka halaman pertama bisa menunggu hasil tersebut:
+```dart
+final hasil = await Navigator.push<String>(...);
+
+if (hasil != null && hasil.isNotEmpty) {
+  ScaffoldMessenger.of(context).showSnackBar(
+    SnackBar(content: Text(hasil)),
+  );
+}
+```
+Pada pola ini, widget tambahan yang dipakai bukan hanya tombol navigasi, tetapi juga `SnackBar`, `Card`, `ListTile`, dan `CircleAvatar`.
 
 ## 4. Tugas Latihan
 1. Gabungkan pelajaran dari Bab 3 dan Bab 4.
-2. Buat Halaman 1 yang memiliki Form Input (NIM, Nama).
-3. Buat tombol "Simpan & Beralih". Ketika tombol ditekan, aplikasi akan beralih ke Halaman 2 dan mengirim (pass) data input teks tersebut lalu dengan menampilkan teks "Selamat Datang [Nama], NIM Anda [NIM]" di halaman kedua.
+2. Buat Halaman 1 yang memiliki form input `NIM` dan `Nama`.
+3. Buat tombol `Simpan & Beralih`. Ketika tombol ditekan, aplikasi harus berpindah ke Halaman 2 dan menampilkan teks `Selamat Datang [Nama], NIM Anda [NIM]`.
+4. Tambahkan satu tombol pada Halaman 2 untuk mengirim pesan balik `Data berhasil disimpan` ke Halaman 1, lalu tampilkan hasilnya menggunakan `SnackBar`.
